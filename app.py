@@ -16,6 +16,34 @@ from flask import Flask, jsonify, render_template, request, session
 
 from job_hunter import SwissJobHunter
 
+
+def display_flower_garden():
+    """Display ASCII flower garden on startup"""
+    garden = """
+    ╔════════════════════════════════════════════════════════════════════╗
+    ║                      🌸 CV GARDEN 🌺                              ║
+    ╚════════════════════════════════════════════════════════════════════╝
+    
+         🌼           🌻           🌷           🌹           🌸
+         |            |            |            |            |
+        _|_          _|_          _|_          _|_          _|_
+       /   \        /   \        /   \        /   \        /   \
+      |     |      |     |      |     |      |     |      |     |
+      
+        🌺           🌼           🌸           🌻           🌷
+        |            |            |            |            |
+       _|_          _|_          _|_          _|_          _|_
+      /   \        /   \        /   \        /   \        /   \
+     |     |      |     |      |     |      |     |      |     |
+     
+    ═══════════════════════════════════════════════════════════════════
+    Finding jobs like picking fresh flowers 🌸
+    Launching on http://localhost:5018
+    ═══════════════════════════════════════════════════════════════════
+    """
+    print(garden)
+
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-key-change-in-production")
 
@@ -486,6 +514,10 @@ def export_job_pack():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+if __name__ == "__main__":
+    display_flower_garden()
+    app.run(debug=True, port=5018)
 
 @app.route("/api/jobs", methods=["POST"])
 def api_jobs():
