@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CV Studio - Multi-Document Encrypted Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div id="app">
+    <!-- VIEW 1: LOGIN -->
+    <div id="loginView" class="view active">
+      <div class="login-container">
+        <div class="login-box">
+          <h1>CV Studio</h1>
+          <p class="subtitle">Multi-Document Encrypted Editor</p>
+          <label>Enter PIN (min 4 chars)<br>
+            <input id="pinInput" type="password" placeholder="****" autofocus>
+          </label>
+          <button id="loginBtn" class="primary">Login</button>
+          <div id="loginError" class="error-message"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: FILE MANAGER -->
+    <div id="filesView" class="view">
+      <header class="topbar">
+        <div class="logo">CV Studio</div>
+        <button id="logoutBtn" class="ghost small">Logout</button>
+      </header>
+      <div class="files-container">
+        <div class="files-panel">
+          <h2>Your CVs</h2>
+          <button id="newFileBtn" class="primary">+ New CV</button>
+          <div id="filesList" class="files-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: CV EDITOR -->
+    <div id="editorView" class="view">
+      <header class="topbar">
+        <div class="logo">
+          <button id="backBtn" class="ghost" title="Back to files">← Back</button>
+          <span id="fileName">Untitled</span>
+        </div>
+        <div class="header-actions">
+          <button onclick="openJobSearch()" class="primary small" title="Find matching jobs">🔍 Find Jobs</button>
+          <button id="renameFileBtn" class="ghost small">Rename</button>
+          <button id="deleteFileBtn" class="ghost small">Delete</button>
+          <button id="logoutBtn2" class="ghost small">Logout</button>
+        </div>
+      </header>
+
+      <main class="editor-layout">
+        <section class="panel form-panel">
+          <div class="section-head">
+            <h3>Personal Info</h3>
+          </div>
+          <div class="grid two">
+            <label>Full name<br><input id="name" placeholder="Alex Rivera"></label>
+            <label>Role / Title<br><input id="title" placeholder="Senior Designer"></label>
+          </div>
+          <label>Summary<br><textarea id="summary" rows="3" placeholder="Professional summary..."></textarea></label>
+
+          <div class="grid two">
+            <label>Email<br><input id="email" placeholder="alex@example.com"></label>
+            <label>Phone<br><input id="phone" placeholder="+49 170 123456"></label>
+          </div>
+          <div class="grid two">
+            <label>Location<br><input id="location" placeholder="Berlin, Germany"></label>
+            <label>Website<br><input id="website" placeholder="https://alex.design"></label>
+          </div>
+
+          <div class="section-head">
+            <h3>Experience</h3>
+            <button id="addExp" class="ghost small">+ Add</button>
+          </div>
+          <div id="experienceList" class="repeatable"></div>
+
+          <div class="section-head">
+            <h3>Education</h3>
+            <button id="addEdu" class="ghost small">+ Add</button>
+          </div>
+          <div id="educationList" class="repeatable"></div>
+
+          <div class="section-head">
+            <h3>Skills</h3>
+            <button id="addSkill" class="ghost small">+ Add</button>
+          </div>
+          <div id="skillsList" class="chips"></div>
+
+          <div class="section-head">
+            <h3>Photo</h3>
+          </div>
+          <input type="file" id="photoInput" accept="image/*">
+        </section>
+
+        <section class="panel preview-panel">
+          <div class="panel-head">
+            <div class="tabs" id="layoutTabs">
+              <button data-layout="modern" class="active">Modern</button>
+              <button data-layout="sidebar">Sidebar</button>
+              <button data-layout="minimal">Minimal</button>
+            </div>
+            <div class="actions">
+              <button id="pdfBtn" class="primary">📄 PDF</button>
+            </div>
+          </div>
+          <div id="cvCanvas" class="cv modern">
+            <div class="cv-header">
+              <div class="cv-photo" id="photoPreview"></div>
+              <div>
+                <div class="cv-name" id="cvName">Your Name</div>
+                <div class="cv-title" id="cvTitle">Your Title</div>
+                <div class="cv-meta" id="cvMeta">Email • Phone • Location</div>
+                <div class="cv-website" id="cvWebsite"></div>
+              </div>
+            </div>
+            <div class="cv-body">
+              <div class="cv-block">
+                <div class="block-title">Summary</div>
+                <div id="cvSummary" class="block-content"></div>
+              </div>
+              <div class="cv-block">
+                <div class="block-title">Experience</div>
+                <div id="cvExperience"></div>
+              </div>
+              <div class="cv-block">
+                <div class="block-title">Education</div>
+                <div id="cvEducation"></div>
+              </div>
+              <div class="cv-block">
+                <div class="block-title">Skills</div>
+                <div id="cvSkills" class="skill-grid"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div class="save-status" id="saveStatus">Ready</div>
+    </div>
+
+    <!-- JOB SEARCH PANEL -->
+    <div id="jobSearchPanel" class="panel job-search-panel" style="display:none; position:fixed; bottom:100px; right:20px; width:450px; max-height:600px; z-index:100; overflow-y:auto;">
+      <div class="panel-head">
+        <h3>🔍 Legal Job Hunter</h3>
+        <button onclick="closeJobSearch()" class="ghost small" style="position:absolute; right:10px; top:10px;">✕</button>
+      </div>
+      
+      <div style="padding: 16px;">
+        <p style="color:#9fb4d1; font-size:13px;">Find 100+ matching jobs in Switzerland based on your skills</p>
+        
+        <label style="margin-top:16px;">
+          Location
+          <select id="jobLocation" style="width:100%; margin-top:4px;">
+            <option value="Switzerland">Nationwide</option>
+            <option value="Zurich">Zurich</option>
+            <option value="Geneva">Geneva</option>
+            <option value="Basel">Basel</option>
+            <option value="Bern">Bern</option>
+            <option value="Lausanne">Lausanne</option>
+          </select>
+        </label>
+        
+        <button id="searchJobsBtn" class="primary" style="width:100%; margin-top:16px;">🚀 Search Jobs</button>
+        
+        <div id="jobSearchResults" style="margin-top:16px;"></div>
+        <div id="jobSearchStatus" style="color:#9fb4d1; font-size:13px; margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

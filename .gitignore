@@ -1,0 +1,23 @@
+# Environment
+.env
+.venv
+venv/
+__pycache__/
+*.pyc
+
+# Sensitive
+.secure/
+*.json
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
