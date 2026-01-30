@@ -24,13 +24,13 @@ class SwissJobHunter:
         """
         all_jobs = []
         
-        # Try real sources first
+        # Try Adzuna API (free tier, reliable)
         try:
-            indeed_jobs = self._search_indeed_ch_rss(skills, location)
-            all_jobs.extend(indeed_jobs)
-            print(f"✓ Indeed.ch RSS: {len(indeed_jobs)} jobs")
+            adzuna_jobs = self._search_adzuna_api(skills, location)
+            all_jobs.extend(adzuna_jobs)
+            print(f"✓ Adzuna API: {len(adzuna_jobs)} jobs")
         except Exception as e:
-            print(f"⚠ Indeed.ch failed: {e}")
+            print(f"⚠ Adzuna API failed: {e}")
         
         try:
             so_jobs = self._search_stackoverflow(skills, location)
@@ -302,40 +302,53 @@ class SwissJobHunter:
         
         return jobs
     
-    def _search_indeed_ch_rss(self, skills: List[str], location: str) -> List[Dict]:
-        """Search Indeed.ch via RSS feed (no API key needed)"""
+    def _search_adzuna_api(self, skills: List[str], location: str) -> List[Dict]:
+        """Search Adzuna API - Free tier, 1000 calls/month, covers Switzerland"""
         jobs = []
+        
+        # Adzuna free API credentials (these are demo keys, get your own at api.adzuna.com)
+        APP_ID = "test"
+        APP_KEY = "test"
         
         try:
             for skill in skills[:3]:
-                # Indeed.ch RSS URL for job search
-                url = f"https://www.indeed.ch/jobs?q={skill.replace(' ', '+')}&l={location.replace(' ', '+')}&rss=1"
+                # Adzuna Switzerland endpoint
+                url = f"https://api.adzuna.com/v1/api/jobs/ch/search/1"
+                params = {
+                    "app_id": APP_ID,
+                    "app_key": APP_KEY,
+                    "results_per_page": 10,
+                    "what": skill,
+                    "where": location,
+                    "content-type": "application/json"
+                }
                 
-                headers = {"User-Agent": self.user_agent}
-                resp = requests.get(url, headers=headers, timeout=8)
+                resp = requests.get(url, params=params, timeout=10)
+                print(f"DEBUG: Adzuna API status {resp.status_code} for skill '{skill}'")
                 
                 if resp.status_code == 200:
-                    soup = BeautifulSoup(resp.content, "xml")
-                    for item in soup.find_all("item")[:10]:
-                        title = item.find("title")
-                        link = item.find("link")
-                        desc = item.find("description")
-                        
-                        if title and link:
-                            jobs.append({
-                                "id": f"indeed_{link.text.split('/')[-1][:10]}",
-                                "title": title.text,
-                                "company": "Indeed.ch",
-                                "location": location,
-                                "url": link.text,
-                                "description": desc.text if desc else "",
-                                "posted": "",
-                                "source": "Indeed.ch",
-                            })
+                    data = resp.json()
+                    results = data.get("results", [])
+                    print(f"DEBUG: Adzuna found {len(results)} jobs")
+                    
+                    for job in results:
+                        jobs.append({
+                            "id": job.get("id", f"adzuna_{hash(job.get('title', '')) % 1000000}"),
+                            "title": job.get("title", "Unknown Title"),
+                            "company": job.get("company", {}).get("display_name", "Unknown Company"),
+                            "location": job.get("location", {}).get("display_name", location),
+                            "url": job.get("redirect_url", "#"),
+                            "description": job.get("description", "")[:200],
+                            "posted": job.get("created", ""),
+                            "source": "Adzuna",
+                            "salary": f"${job.get('salary_min', 0)}-${job.get('salary_max', 0)}" if job.get("salary_min") else "",
+                        })
+                else:
+                    print(f"DEBUG: Adzuna error response: {resp.text[:200]}")
                 
                 time.sleep(0.5)
         except Exception as e:
-            pass  # Fail silently
+            print(f"DEBUG: Adzuna API error: {e}")
         
         return jobs
     
